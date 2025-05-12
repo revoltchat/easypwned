@@ -1,8 +1,4 @@
 [workspace]
 resolver = "2"
 
-members = [
-    "downloader",
-    "easypwned",
-    "easypwned_bloom",
-]
+members = ["downloader", "easypwned", "easypwned_bloom"]

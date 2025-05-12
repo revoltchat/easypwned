@@ -1,19 +1,18 @@
-use std::future::IntoFuture;
 use axum::extract::{Extension, Path};
-use axum::{routing::{get}, Json, Router, extract};
-
+use axum::{extract, routing::get, Json, Router};
+use std::future::IntoFuture;
 
 use serde_json::{json, Value};
 use sha1::{Digest, Sha1};
 use std::net::SocketAddr;
 
-use std::sync::Arc;
 use axum::routing::post;
 use clap::Parser;
+use easypwned_bloom::bloom::{bloom_get, EasyBloom};
 use serde_derive::Deserialize;
+use std::sync::Arc;
 use tokio::net::TcpListener;
 use tokio::signal::unix::{signal, SignalKind};
-use easypwned_bloom::bloom::{bloom_get, EasyBloom};
 
 #[derive(Parser, Debug)]
 pub struct Opt {
@@ -25,7 +24,6 @@ pub struct Opt {
 
 #[tokio::main]
 async fn main() -> ::anyhow::Result<(), ::anyhow::Error> {
-
     let opt: Opt = Opt::parse();
 
     println!("reading bloom filter file {}", &opt.bloomfile);
@@ -92,7 +90,7 @@ async fn handler_hash(
     Extension(bloom): Extension<Arc<EasyBloom>>,
     Path(hash): Path<String>,
 ) -> Json<Value> {
-    let check = bloom.check(&hash.as_bytes().to_vec());
+    let check = bloom.check(&hash.to_uppercase().as_bytes().to_vec());
     Json(json!({
         "hash": hash,
         "secure": !check,
@@ -108,7 +106,7 @@ async fn handler_check(
     Extension(bloom): Extension<Arc<EasyBloom>>,
     extract::Json(payload): extract::Json<CheckRequestBody>,
 ) -> Json<Value> {
-    let check = bloom.check(&payload.hash.as_bytes().to_vec());
+    let check = bloom.check(&payload.hash.to_uppercase().as_bytes().to_vec());
     Json(json!({
         "hash": payload.hash,
         "secure": !check,
